@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { submitContactForm } from "@/lib/api";
 import type { ContactFormData } from "@/lib/types";
 
 const schema = z.object({
@@ -51,15 +50,22 @@ export default function ContactForm() {
     resolver: zodResolver(schema),
   });
 
+  // Replace xpwzabcd below with your Formspree form ID
+  const FORMSPREE_ID = "xpwzabcd";
+
   const onSubmit = async (data: ContactFormData) => {
     setState("submitting");
     try {
-      const result = await submitContactForm(data);
-      if (result.success) {
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
         setState("success");
         reset();
       } else {
-        throw new Error(result.message);
+        throw new Error("Submission failed");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
